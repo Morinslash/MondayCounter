@@ -1,0 +1,84 @@
+﻿@page "/"
+@using System.Timers
+
+
+<PageTitle>Mondays Counter</PageTitle>
+<div class="container">
+    <div class="my-grid">
+        <div class="cell" id="left-top">
+            <h2>Next Monday In:</h2>
+        </div>
+        <div class="cell" id="right-top">
+            <h2>@_timeRemaining</h2>
+        </div>
+        <div class="cell"></div>
+        <div class="cell">
+            <p class="text-center">
+                <span class="left">Monday This Week </span>
+                <span class="right">@_dayOfTheWeek</span>
+            </p>
+            <p class="text-center">
+                <span class="left">Monday This Month</span>
+                <span class="right">@Today.Day</span>
+            </p>
+            <p class="text-center">
+                <span class="left">Monday This Year</span>
+                <span class="right">@_dayOfTheYear</span>
+            </p>
+            <p class="text-center">
+                <span class="left">Monday This Century</span>
+                <span class="right">@_dayOfTheCentury</span>
+            </p>
+            <p class="text-center">
+                <span class="left">Monday Since Jezus was born</span>
+                <span class="right">@_dayOfTheEra</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+@code{
+    static DateTime Today = DateTime.Today;
+    int _dayOfTheWeek = (int)Today.DayOfWeek;
+    int _dayOfTheYear = Today.DayOfYear;
+    static DateTime StartOfCentury = new DateTime(Today.Year / 100 * 100, 1, 1);
+    int _dayOfTheCentury = (Today - StartOfCentury).Days;
+    int _dayOfTheEra = Today.Year * 365 + Today.Day;
+
+    private Timer _timer;
+    private DateTime _tomorrow;
+    private TimeSpan _timeUntilTomorrow;
+    private string _timeRemaining;
+
+    protected override void OnInitialized()
+    {
+        _tomorrow = DateTime.Today.AddDays(1);
+        _timeUntilTomorrow = _tomorrow - DateTime.Now;
+
+        _timer = new Timer(1000);
+        _timer.Elapsed += UpdateTimeRemaining;
+        _timer.Start();
+    }
+
+    private void UpdateTimeRemaining(object sender, ElapsedEventArgs e)
+    {
+        _timeUntilTomorrow = _tomorrow - DateTime.Now;
+
+        if (_timeUntilTomorrow <= TimeSpan.Zero)
+        {
+            _timer.Stop();
+            _timeRemaining = "Tomorrow has arrived!";
+        }
+        else
+        {
+            _timeRemaining = $"{_timeUntilTomorrow.Hours:D2}:{_timeUntilTomorrow.Minutes:D2}:{_timeUntilTomorrow.Seconds:D2}";
+        }
+
+        if (DateTime.Now > Today)
+        {
+            Today = DateTime.Today;
+        }
+        InvokeAsync(() => StateHasChanged());
+    }
+
+}
